@@ -1,0 +1,46 @@
+{
+  "name": "learnify",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "format": "prettier --write .",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:generate": "prisma generate",
+    "seed": "ts-node prisma/seed.ts",
+    "build:ssr": "next build",
+    "postbuild": "cp -R .next functions/.next || true && cp -R public functions/public || true",
+    "prepare:functions": "npm --prefix functions install --no-audit --no-fund",
+    "deploy:firebase": "firebase deploy --only hosting,functions",
+    "emulate:firebase": "firebase emulators:start --only hosting,functions"
+  },
+  "dependencies": {
+    "next": "14.2.25",
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
+    "@clerk/nextjs": "^4.0.0",
+    "@supabase/supabase-js": "^2.0.0",
+    "@prisma/client": "^5.0.0",
+    "framer-motion": "^10.0.0",
+    "zustand": "^4.0.0",
+    "recharts": "^2.5.0",
+    "lucide-react": "^0.230.0",
+    "openai": "^4.0.0"
+  },
+  "devDependencies": {
+    "prisma": "^5.0.0",
+    "typescript": "^5.0.0",
+    "eslint": "^8.0.0",
+    "prettier": "^2.8.0",
+    "tailwindcss": "^3.0.0",
+    "postcss": "^8.0.0",
+    "autoprefixer": "^10.0.0",
+    "ts-node": "^10.0.0",
+    "@types/react": "^18.2.21",
+    "@types/react-dom": "^18.2.7",
+    "@types/node": "^20.2.5"
+  }
+}

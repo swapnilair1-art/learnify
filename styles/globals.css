@@ -1,0 +1,26 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-focus-blue: #2563EB;
+  --color-calm-slate: #0F172A;
+  --color-cognitive-white: #F8FAFC;
+  --color-accent-teal: #14B8A6;
+  --color-warning-gold: #F59E0B;
+}
+
+html, body, #__next {
+  height: 100%;
+}
+
+body {
+  background-color: var(--color-cognitive-white);
+  color: #0f172a;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.card {
+  @apply bg-white rounded-xl shadow-sm p-4;
+}

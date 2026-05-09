@@ -1,0 +1,38 @@
+[
+  {
+    "slug": "numpy-mastery",
+    "title": "NumPy Mastery",
+    "description": "Master arrays, indexing, broadcasting and advanced NumPy techniques.",
+    "days": [
+      { "day": 1, "title": "Day 1 — Basics", "content": "Intro to arrays", "locked": false, "order": 1 },
+      { "day": 2, "title": "Day 2 — Indexing", "content": "Indexing and slicing", "locked": true, "order": 2 },
+      { "day": 3, "title": "Day 3 — Reshaping", "content": "Reshaping arrays", "locked": true, "order": 3 },
+      { "day": 4, "title": "Day 4 — Broadcasting", "content": "Broadcasting and vectorization", "locked": true, "order": 4 },
+      { "day": 5, "title": "Day 5 — Aggregation", "content": "Aggregation functions and performance", "locked": true, "order": 5 }
+    ]
+  },
+  {
+    "slug": "matplotlib-mastery",
+    "title": "Matplotlib Mastery",
+    "description": "Design elegant visualizations, subplots, and storytelling with Matplotlib.",
+    "days": [
+      { "day": 1, "title": "Day 1 — Plot basics", "content": "Line and scatter plots", "locked": false, "order": 1 },
+      { "day": 2, "title": "Day 2 — Customization", "content": "Colors and styles", "locked": true, "order": 2 },
+      { "day": 3, "title": "Day 3 — Subplots", "content": "Subplots and layouts", "locked": true, "order": 3 },
+      { "day": 4, "title": "Day 4 — Advanced", "content": "Animations and 3D", "locked": true, "order": 4 },
+      { "day": 5, "title": "Day 5 — Storytelling", "content": "Designing narratives with data", "locked": true, "order": 5 }
+    ]
+  },
+  {
+    "slug": "pandas-mastery",
+    "title": "Pandas Mastery",
+    "description": "Learn DataFrames, cleaning, grouping, merging and real-world analytics.",
+    "days": [
+      { "day": 1, "title": "Day 1 — Series & DataFrames", "content": "Basics of Series and DataFrames", "locked": false, "order": 1 },
+      { "day": 2, "title": "Day 2 — Indexing & Filtering", "content": "Filtering and selection", "locked": true, "order": 2 },
+      { "day": 3, "title": "Day 3 — Cleaning", "content": "Handling missing data", "locked": true, "order": 3 },
+      { "day": 4, "title": "Day 4 — Grouping", "content": "GroupBy and aggregations", "locked": true, "order": 4 },
+      { "day": 5, "title": "Day 5 — Merging", "content": "Joins and merges", "locked": true, "order": 5 }
+    ]
+  }
+]

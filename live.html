@@ -1,0 +1,286 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Learnify — Single-file Local Preview</title>
+  <style>
+    :root{--bg:#071028;--card:#07162a;--accent:#7c5cff;--muted:#9aa4b2;--text:#e6eef8}
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:linear-gradient(180deg,#041021,#071427);color:var(--text);}
+    .wrap{max-width:1100px;margin:28px auto;padding:20px}
+    header{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+    .brand{display:flex;flex-direction:column}
+    .brand h1{margin:0;font-size:20px}
+    nav{display:flex;gap:10px}
+    a.nav{color:var(--text);text-decoration:none;padding:8px 12px;border-radius:8px;background:rgba(255,255,255,0.02)}
+    a.nav.active{background:linear-gradient(90deg,var(--accent),#5ad1ff)}
+    .card{background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01));padding:18px;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,0.6)}
+    .muted{color:var(--muted);font-size:13px}
+    .grid{display:grid;grid-template-columns:1fr 320px;gap:18px}
+    .list{display:flex;flex-direction:column;gap:12px}
+    .course{padding:14px;border-radius:10px;background:rgba(0,0,0,0.12);display:flex;justify-content:space-between;align-items:center}
+    button.btn{background:var(--accent);color:white;padding:8px 12px;border-radius:8px;border:0;cursor:pointer}
+    .small{font-size:13px;color:var(--muted)}
+    .progress{height:12px;background:#0a2236;border-radius:8px;overflow:hidden}
+    .progress > i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),#5ad1ff)}
+    .chat{display:flex;flex-direction:column;gap:8px}
+    .msg.user{text-align:right}
+    .msg.assistant{text-align:left}
+    .msg .bubble{display:inline-block;padding:8px 12px;border-radius:10px;background:rgba(255,255,255,0.03)}
+    footer{margin-top:18px;color:var(--muted);font-size:13px}
+    @media(max-width:900px){.grid{grid-template-columns:1fr}nav{flex-wrap:wrap}}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="brand">
+        <h1>Learnify — Local Single-file Preview</h1>
+        <div class="small muted">Static, client-only demo — safe to host locally</div>
+      </div>
+      <nav id="nav"></nav>
+    </header>
+
+    <main id="main"></main>
+
+    <footer class="muted">Host with: <code>python3 -m http.server 8000</code> then open <strong>http://localhost:8000/live.html</strong> (or use <code>npx serve -p 8000</code>)</footer>
+  </div>
+
+  <script>
+    // Sample course data
+    const sampleCourses = [
+      {
+        slug: 'memory-mastery',
+        title: 'Memory Mastery',
+        subtitle: 'Techniques to remember everything faster',
+        days: [
+          {title: 'Introduction & Goals', minutes: 10},
+          {title: 'The Memory Palace', minutes: 25},
+          {title: 'Spaced Repetition Basics', minutes: 20}
+        ]
+      },
+      {
+        slug: 'speed-reading',
+        title: 'Speed Reading Essentials',
+        subtitle: 'Read 2x–3x faster with comprehension',
+        days: [
+          {title:'Skimming vs Deep', minutes:12},
+          {title:'Eye Movement Drills', minutes:22}
+        ]
+      },
+      {
+        slug: 'ai-mentor-bootcamp',
+        title: 'AI Mentor Bootcamp',
+        subtitle: 'Practical prompts and learning workflows',
+        days: [
+          {title:'Prompt Basics', minutes:15},
+          {title:'Designing Daily Missions', minutes:20}
+        ]
+      }
+    ];
+
+    // Local state keys
+    const LS_PROGRESS = 'learnify_progress_v1';
+    const LS_ENROLL = 'learnify_enroll_v1';
+
+    // Init nav
+    const navEl = document.getElementById('nav');
+    const routes = [
+      {hash:'#/', label:'Home'},
+      {hash:'#/dashboard', label:'Dashboard'},
+      {hash:'#/courses', label:'Courses'},
+      {hash:'#/ai', label:'AI Mentor'}
+    ];
+    function renderNav(){
+      navEl.innerHTML = '';
+      routes.forEach(r => {
+        const a = document.createElement('a');
+        a.href = r.hash;
+        a.className = 'nav' + (location.hash === r.hash || (r.hash==='#/' && !location.hash) ? ' active':'');
+        a.textContent = r.label;
+        navEl.appendChild(a);
+      });
+    }
+
+    // Progress helpers
+    function loadProgress(){
+      const raw = localStorage.getItem(LS_PROGRESS);
+      return raw ? JSON.parse(raw) : {xp:0, level:1, streak:0, name: 'Demo Learner'};
+    }
+    function saveProgress(p){ localStorage.setItem(LS_PROGRESS, JSON.stringify(p)); }
+    function addXP(amount){ const p = loadProgress(); p.xp += amount; p.level = Math.max(1, Math.floor(p.xp/100)+1); saveProgress(p); }
+
+    function loadEnroll(){ const raw = localStorage.getItem(LS_ENROLL); return raw ? JSON.parse(raw) : {}; }
+    function saveEnroll(e){ localStorage.setItem(LS_ENROLL, JSON.stringify(e)); }
+
+    // Router + render
+    const main = document.getElementById('main');
+    function router(){
+      renderNav();
+      const hash = location.hash || '#/';
+      if(hash.startsWith('#/courses/')){
+        const slug = hash.replace('#/courses/',''); renderCourseDetail(slug);
+      } else if(hash === '#/courses'){
+        renderCourses();
+      } else if(hash === '#/dashboard'){
+        renderDashboard();
+      } else if(hash === '#/ai'){
+        renderAI();
+      } else {
+        renderHome();
+      }
+    }
+    window.addEventListener('hashchange', router);
+    window.addEventListener('load', router);
+
+    // Views
+    function renderHome(){
+      main.innerHTML = `
+        <div class="card">
+          <h2>Welcome to Learnify (Local)</h2>
+          <p class="muted">This single HTML file contains a simplified, client-only preview of the app: courses, progress, a fake AI mentor, and certificate generation.</p>
+          <div style="display:flex;gap:10px;margin-top:12px">
+            <a class="btn" href="#/courses">Browse Courses</a>
+            <a class="btn" href="#/dashboard">Open Dashboard</a>
+            <a class="btn" href="#/ai">Open AI Mentor</a>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderDashboard(){
+      const p = loadProgress();
+      const percent = Math.min(100, (p.xp % 100));
+      main.innerHTML = `
+        <div class="grid">
+          <div class="card">
+            <h2>Dashboard</h2>
+            <p class="small muted">Learner: <strong>${escapeHtml(p.name)}</strong></p>
+            <div style="margin-top:12px">
+              <div class="small muted">XP: ${p.xp} — Level: ${p.level}</div>
+              <div class="progress" style="margin-top:8px"><i style="width:${percent}%"></i></div>
+            </div>
+            <div style="margin-top:14px">
+              <button class="btn" id="gen-cert">Generate Certificate (demo)</button>
+            </div>
+          </div>
+
+          <aside>
+            <div class="card">
+              <h3>Quick Actions</h3>
+              <div style="margin-top:8px" class="list">
+                <button class="btn" id="fake-xp">Add 25 XP</button>
+                <a class="nav" href="#/courses">Go to Courses</a>
+                <a class="nav" href="#/ai">Open AI Mentor</a>
+              </div>
+            </div>
+          </aside>
+        </div>
+      `;
+
+      document.getElementById('fake-xp').onclick = ()=>{ addXP(25); router(); };
+      document.getElementById('gen-cert').onclick = ()=>{ generateCertificate(p.name, 'Demo Course'); };
+    }
+
+    function renderCourses(){
+      const enroll = loadEnroll();
+      main.innerHTML = `<div class="card"><h2>Courses</h2><div class="list" id="course-list"></div></div>`;
+      const list = document.getElementById('course-list');
+      sampleCourses.forEach(c=>{
+        const div = document.createElement('div'); div.className='course';
+        div.innerHTML = `<div>
+            <div style="font-weight:700">${escapeHtml(c.title)}</div>
+            <div class="small muted">${escapeHtml(c.subtitle)}</div>
+          </div>
+          <div style="display:flex;gap:8px">
+            <a class="nav" href="#/courses/${c.slug}">Open</a>
+            <button class="btn enroll">${enroll[c.slug] ? 'Continue' : 'Enroll'}</button>
+          </div>`;
+        list.appendChild(div);
+        div.querySelector('.enroll').onclick = ()=>{ enrollCourse(c.slug); router(); };
+      });
+    }
+
+    function renderCourseDetail(slug){
+      const course = sampleCourses.find(s=>s.slug===slug);
+      if(!course){ main.innerHTML = '<div class="card">Course not found</div>'; return; }
+      const enroll = loadEnroll();
+      const my = enroll[slug] || {completed:[]};
+      main.innerHTML = `<div class="card">
+          <h2>${escapeHtml(course.title)}</h2>
+          <p class="muted">${escapeHtml(course.subtitle)}</p>
+          <div style="margin-top:12px;display:flex;gap:10px;align-items:center">
+            <button class="btn" id="complete-day">Mark Next Day Complete</button>
+            <a class="nav" href="#/courses">Back to courses</a>
+          </div>
+          <h3 style="margin-top:16px">Days</h3>
+          <ol id="days-list"></ol>
+        </div>`;
+
+      const daysList = document.getElementById('days-list');
+      course.days.forEach((d,idx)=>{
+        const li = document.createElement('li');
+        li.innerHTML = `<strong>${escapeHtml(d.title)}</strong> <span class="small muted">(${d.minutes} min)</span> ${my.completed.includes(idx) ? '<em style="margin-left:8px;color:#7cffc7">✓ completed</em>':''}`;
+        daysList.appendChild(li);
+      });
+
+      document.getElementById('complete-day').onclick = ()=>{
+        const e = loadEnroll(); if(!e[slug]) e[slug]={completed:[]};
+        const next = course.days.findIndex((_,i)=>!e[slug].completed.includes(i));
+        if(next===-1){ alert('All days complete — well done!'); return; }
+        e[slug].completed.push(next); saveEnroll(e); addXP(20); router();
+      };
+    }
+
+    // Simple AI Mentor (fake offline)
+    let chatMessages = [];
+    function renderAI(){
+      main.innerHTML = `<div class="card">
+        <h2>AI Mentor (demo)</h2>
+        <p class="muted">This offline mentor returns helpful canned responses so you can demo the chat UX locally.</p>
+        <div id="chat" class="chat" style="margin-top:12px"></div>
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <input id="chat-input" placeholder="Ask your mentor a question..." style="flex:1;padding:10px;border-radius:8px;border:0;background:rgba(255,255,255,0.02);color:var(--text)" />
+          <button class="btn" id="send-chat">Send</button>
+        </div>
+      </div>`;
+
+      const chatEl = document.getElementById('chat');
+      const input = document.getElementById('chat-input');
+      document.getElementById('send-chat').onclick = ()=>{ const t = input.value.trim(); if(!t) return; pushChat('user',t); input.value=''; simulateAI(t); };
+      renderChat();
+    }
+
+    function pushChat(role,text){ chatMessages.push({role,text}); renderChat(); }
+    function renderChat(){ const chatEl=document.getElementById('chat'); if(!chatEl) return; chatEl.innerHTML=''; chatMessages.forEach(m=>{ const div=document.createElement('div'); div.className='msg '+(m.role==='user'?'user':'assistant'); const bubble=document.createElement('div'); bubble.className='bubble'; bubble.textContent = m.text; div.appendChild(bubble); chatEl.appendChild(div); }); chatEl.scrollTop = chatEl.scrollHeight; }
+
+    function simulateAI(question){ pushChat('assistant','Thinking...'); setTimeout(()=>{ chatMessages.pop(); const reply = generateAIReply(question); pushChat('assistant',reply); }, 700); }
+
+    function generateAIReply(q){ q = q.toLowerCase(); if(q.includes('plan')||q.includes('daily')) return 'Try a short 20-minute focused session today: 1) review yesterday notes (5m), 2) practice an encoding drill (10m), 3) quick self-quiz (5m).';
+    if(q.includes('memory')||q.includes('palace')) return 'The Memory Palace links new items to vivid locations. Start small: 5 items in a single room.';
+    if(q.includes('certificate')||q.includes('cert')) return 'You can generate a demo certificate from the Dashboard by clicking "Generate Certificate".';
+    return 'Nice question — try rephrasing with a specific goal (e.g., "Help me remember 10 words by tonight").'; }
+
+    // Certificate generation (canvas -> PNG)
+    function generateCertificate(name, course){
+      const w = 1200, h = 800; const c = document.createElement('canvas'); c.width=w; c.height=h; const ctx = c.getContext('2d');
+      ctx.fillStyle = '#071427'; ctx.fillRect(0,0,w,h);
+      ctx.fillStyle = '#fff'; ctx.font = '48px serif'; ctx.fillText('Certificate of Completion', 90, 180);
+      ctx.font = '36px serif'; ctx.fillText(course, 120, 300);
+      ctx.font = '28px serif'; ctx.fillText('Awarded to: ' + name, 120, 420);
+      ctx.font = '20px serif'; ctx.fillText(new Date().toLocaleDateString(), 120, 480);
+      const url = c.toDataURL('image/png'); const a = document.createElement('a'); a.href = url; a.download = 'learnify-certificate.png'; document.body.appendChild(a); a.click(); a.remove();
+    }
+
+    // Utilities
+    function enrollCourse(slug){ const e = loadEnroll(); if(!e[slug]) e[slug]={completed:[]}; saveEnroll(e); alert('Enrolled in course — progress saved in localStorage.'); }
+    function escapeHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+    // Expose small API for console testing
+    window.__learnify = {addXP, loadProgress, sampleCourses, generateCertificate};
+
+  </script>
+</body>
+</html>
