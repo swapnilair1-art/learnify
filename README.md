@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Learnify — Phase 1 Scaffold
 
 This repository contains the Phase 1 scaffold for Learnify: a cognitive learning OS.
@@ -58,3 +59,6 @@ Files of interest
 - [app/dashboard/page.tsx](app/dashboard/page.tsx) — Dashboard scaffold
 - [components/ui/ButtonPrimary.tsx](components/ui/ButtonPrimary.tsx) — UI primitive
 - [prisma/schema.prisma](prisma/schema.prisma) — DB schema
+=======
+
+>>>>>>> ef61c450197e76b690d75629685b0afab46bf934
